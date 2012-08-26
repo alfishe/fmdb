@@ -701,7 +701,8 @@
         // we need the count of params to avoid an error below.
         idx = (int) [[dictionaryArgs allKeys] count];
     }
-    else {
+    else
+    {
             
         while (idx < queryCount)
         {
@@ -832,6 +833,7 @@
         {
             retry   = NO;
             rc      = sqlite3_prepare_v2(_db, [sql UTF8String], -1, &pStmt, 0);
+            
             if (SQLITE_BUSY == rc || SQLITE_LOCKED == rc)
             {
                 retry = YES;
@@ -933,7 +935,6 @@
         }
     }
     
-    
     if (idx != queryCount)
     {
         NSLog(@"Error: the bind count is not correct for the # of variables (%@) (executeUpdate)", sql);
@@ -1000,7 +1001,6 @@
             NSLog(@"Unknown error calling sqlite3_step (%d: %s) eu", rc, sqlite3_errmsg(_db));
             NSLog(@"DB Query: %@", sql);
         }
-        
     } while (retry);
     
     if (rc == SQLITE_ROW)
@@ -1070,7 +1070,7 @@
     va_list args;
     va_start(args, format);
     
-    NSMutableString *sql      = [NSMutableString stringWithCapacity:[format length]];
+    NSMutableString *sql = [NSMutableString stringWithCapacity:[format length]];
     NSMutableArray *arguments = [NSMutableArray array];
     
     [self extractSQL:format argumentsList:args intoString:sql arguments:arguments];    
@@ -1227,7 +1227,6 @@
 
 #endif
 
-
 - (BOOL)shouldCacheStatements
 {
     return _shouldCacheStatements;
@@ -1259,7 +1258,6 @@ void FMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlite3
 #endif
     block(context, argc, argv);
 }
-
 
 - (void)makeFunctionNamed:(NSString*)name maximumArguments:(int)count withBlock:(void (^)(sqlite3_context *context, int argc, sqlite3_value **argv))block
 {
