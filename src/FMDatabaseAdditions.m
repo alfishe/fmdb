@@ -27,36 +27,44 @@ type ret = [resultSet sel:0];                                        \
 return ret;
 
 
-- (NSString*)stringForQuery:(NSString*)query, ... {
+- (NSString*)stringForQuery:(NSString*)query, ...
+{
     RETURN_RESULT_FOR_QUERY_WITH_SELECTOR(NSString *, stringForColumnIndex);
 }
 
-- (int)intForQuery:(NSString*)query, ... {
+- (int)intForQuery:(NSString*)query, ...
+{
     RETURN_RESULT_FOR_QUERY_WITH_SELECTOR(int, intForColumnIndex);
 }
 
-- (long)longForQuery:(NSString*)query, ... {
+- (long)longForQuery:(NSString*)query, ...
+{
     RETURN_RESULT_FOR_QUERY_WITH_SELECTOR(long, longForColumnIndex);
 }
 
-- (BOOL)boolForQuery:(NSString*)query, ... {
+- (BOOL)boolForQuery:(NSString*)query, ...
+{
     RETURN_RESULT_FOR_QUERY_WITH_SELECTOR(BOOL, boolForColumnIndex);
 }
 
-- (double)doubleForQuery:(NSString*)query, ... {
+- (double)doubleForQuery:(NSString*)query, ...
+{
     RETURN_RESULT_FOR_QUERY_WITH_SELECTOR(double, doubleForColumnIndex);
 }
 
-- (NSData*)dataForQuery:(NSString*)query, ... {
+- (NSData*)dataForQuery:(NSString*)query, ...
+{
     RETURN_RESULT_FOR_QUERY_WITH_SELECTOR(NSData *, dataForColumnIndex);
 }
 
-- (NSDate*)dateForQuery:(NSString*)query, ... {
+- (NSDate*)dateForQuery:(NSString*)query, ...
+{
     RETURN_RESULT_FOR_QUERY_WITH_SELECTOR(NSDate *, dateForColumnIndex);
 }
 
 
-- (BOOL)tableExists:(NSString*)tableName {
+- (BOOL)tableExists:(NSString*)tableName
+{
     
     tableName = [tableName lowercaseString];
     
@@ -86,16 +94,16 @@ return ret;
 /* 
  get table schema: result colums: cid[INTEGER], name,type [STRING], notnull[INTEGER], dflt_value[],pk[INTEGER]
 */
-- (FMResultSet*)getTableSchema:(NSString*)tableName {
-    
+- (FMResultSet*)getTableSchema:(NSString*)tableName
+{
     //result colums: cid[INTEGER], name,type [STRING], notnull[INTEGER], dflt_value[],pk[INTEGER]
     FMResultSet *rs = [self executeQuery:[NSString stringWithFormat: @"PRAGMA table_info('%@')", tableName]];
     
     return rs;
 }
 
-- (BOOL)columnExists:(NSString*)columnName inTableWithName:(NSString*)tableName {
-    
+- (BOOL)columnExists:(NSString*)columnName inTableWithName:(NSString*)tableName
+{
     BOOL returnBool = NO;
     
     tableName  = [tableName lowercaseString];
@@ -105,7 +113,8 @@ return ret;
     
     //check if column is present in table schema
     while ([rs next]) {
-        if ([[[rs stringForColumn:@"name"] lowercaseString] isEqualToString:columnName]) {
+        if ([[[rs stringForColumn:@"name"] lowercaseString] isEqualToString:columnName])
+        {
             returnBool = YES;
             break;
         }
@@ -120,22 +129,27 @@ return ret;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-implementations"
 
-- (BOOL)columnExists:(NSString*)tableName columnName:(NSString*)columnName __attribute__ ((deprecated)) {
+- (BOOL)columnExists:(NSString*)tableName columnName:(NSString*)columnName __attribute__ ((deprecated))
+{
     return [self columnExists:columnName inTableWithName:tableName];
 }
 
 #pragma clang diagnostic pop
 
-- (BOOL)validateSQL:(NSString*)sql error:(NSError**)error {
+- (BOOL)validateSQL:(NSString*)sql error:(NSError**)error
+{
     sqlite3_stmt *pStmt = NULL;
     BOOL validationSucceeded = YES;
     BOOL keepTrying = YES;
     int numberOfRetries = 0;
     
-    while (keepTrying == YES) {
+    while (keepTrying == YES)
+    {
         keepTrying = NO;
         int rc = sqlite3_prepare_v2(_db, [sql UTF8String], -1, &pStmt, 0);
-        if (rc == SQLITE_BUSY || rc == SQLITE_LOCKED) {
+        
+        if (rc == SQLITE_BUSY || rc == SQLITE_LOCKED)
+        {
             keepTrying = YES;
             usleep(20);
             
@@ -144,9 +158,12 @@ return ret;
                 NSLog(@"Database busy");
             }          
         } 
-        else if (rc != SQLITE_OK) {
+        else if (rc != SQLITE_OK)
+        {
             validationSucceeded = NO;
-            if (error) {
+
+            if (error)
+            {
                 *error = [NSError errorWithDomain:NSCocoaErrorDomain 
                                              code:[self lastErrorCode]
                                          userInfo:[NSDictionary dictionaryWithObject:[self lastErrorMessage] 

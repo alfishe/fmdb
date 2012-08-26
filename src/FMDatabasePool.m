@@ -18,20 +18,22 @@
 
 
 @implementation FMDatabasePool
-@synthesize path=_path;
-@synthesize delegate=_delegate;
-@synthesize maximumNumberOfDatabasesToCreate=_maximumNumberOfDatabasesToCreate;
+@synthesize path = _path;
+@synthesize delegate = _delegate;
+@synthesize maximumNumberOfDatabasesToCreate = _maximumNumberOfDatabasesToCreate;
 
 
-+ (id)databasePoolWithPath:(NSString*)aPath {
++ (id)databasePoolWithPath:(NSString*)aPath
+{
     return FMDBReturnAutoreleased([[self alloc] initWithPath:aPath]);
 }
 
-- (id)initWithPath:(NSString*)aPath {
-    
+- (id)initWithPath:(NSString*)aPath
+{
     self = [super init];
     
-    if (self != nil) {
+    if (self != nil)
+    {
         _path               = [aPath copy];
         _lockQueue          = dispatch_queue_create([[NSString stringWithFormat:@"fmdb.%@", self] UTF8String], NULL);
         _databaseInPool     = FMDBReturnRetained([NSMutableArray array]);
@@ -41,14 +43,15 @@
     return self;
 }
 
-- (void)dealloc {
-    
+- (void)dealloc
+{
     _delegate = 0x00;
     FMDBRelease(_path);
     FMDBRelease(_databaseInPool);
     FMDBRelease(_databaseOutPool);
     
-    if (_lockQueue) {
+    if (_lockQueue)
+    {
         FMDBDispatchQueueRelease(_lockQueue);
         _lockQueue = 0x00;
     }
@@ -57,20 +60,24 @@
 #endif
 }
 
-
-- (void)executeLocked:(void (^)(void))aBlock {
+- (void)executeLocked:(void (^)(void))aBlock
+{
     dispatch_sync(_lockQueue, aBlock);
 }
 
-- (void)pushDatabaseBackInPool:(FMDatabase*)db {
+- (void)pushDatabaseBackInPool:(FMDatabase*)db
+{
     
-    if (!db) { // db can be null if we set an upper bound on the # of databases to create.
+    if (!db)
+    { // db can be null if we set an upper bound on the # of databases to create.
         return;
     }
     
-    [self executeLocked:^() {
+    [self executeLocked:^()
+    {
         
-        if ([_databaseInPool containsObject:db]) {
+        if ([_databaseInPool containsObject:db])
+        {
             [[NSException exceptionWithName:@"Database already in pool" reason:@"The FMDatabase being put back into the pool is already present in the pool" userInfo:nil] raise];
         }
         
@@ -80,23 +87,27 @@
     }];
 }
 
-- (FMDatabase*)db {
-    
+- (FMDatabase*)db
+{
     __block FMDatabase *db;
     
-    [self executeLocked:^() {
+    [self executeLocked:^()
+    {
         db = [_databaseInPool lastObject];
         
-        if (db) {
+        if (db)
+        {
             [_databaseOutPool addObject:db];
             [_databaseInPool removeLastObject];
         }
-        else {
-            
-            if (_maximumNumberOfDatabasesToCreate) {
+        else
+        {
+            if (_maximumNumberOfDatabasesToCreate)
+            {
                 NSUInteger currentCount = [_databaseOutPool count] + [_databaseInPool count];
                 
-                if (currentCount >= _maximumNumberOfDatabasesToCreate) {
+                if (currentCount >= _maximumNumberOfDatabasesToCreate)
+                {
                     NSLog(@"Maximum number of databases (%ld) has already been reached!", (long)currentCount);
                     return;
                 }
@@ -106,19 +117,24 @@
         }
         
         //This ensures that the db is opened before returning
-        if ([db open]) {
-            if ([_delegate respondsToSelector:@selector(databasePool:shouldAddDatabaseToPool:)] && ![_delegate databasePool:self shouldAddDatabaseToPool:db]) {
+        if ([db open])
+        {
+            if ([_delegate respondsToSelector:@selector(databasePool:shouldAddDatabaseToPool:)] && ![_delegate databasePool:self shouldAddDatabaseToPool:db])
+            {
                 [db close];
                 db = 0x00;
             }
-            else {
+            else
+            {
                 //It should not get added in the pool twice if lastObject was found
-                if (![_databaseOutPool containsObject:db]) {
+                if (![_databaseOutPool containsObject:db])
+                {
                     [_databaseOutPool addObject:db];
                 }
             }
         }
-        else {
+        else
+        {
             NSLog(@"Could not open up the database at path %@", _path);
             db = 0x00;
         }
@@ -127,47 +143,53 @@
     return db;
 }
 
-- (NSUInteger)countOfCheckedInDatabases {
-    
+- (NSUInteger)countOfCheckedInDatabases
+{
     __block NSUInteger count;
     
-    [self executeLocked:^() {
+    [self executeLocked:^()
+    {
         count = [_databaseInPool count];
     }];
     
     return count;
 }
 
-- (NSUInteger)countOfCheckedOutDatabases {
-    
+- (NSUInteger)countOfCheckedOutDatabases
+{
     __block NSUInteger count;
     
-    [self executeLocked:^() {
+    [self executeLocked:^()
+    {
         count = [_databaseOutPool count];
     }];
     
     return count;
 }
 
-- (NSUInteger)countOfOpenDatabases {
+- (NSUInteger)countOfOpenDatabases
+{
     __block NSUInteger count;
     
-    [self executeLocked:^() {
+    [self executeLocked:^()
+    {
         count = [_databaseOutPool count] + [_databaseInPool count];
     }];
     
     return count;
 }
 
-- (void)releaseAllDatabases {
-    [self executeLocked:^() {
+- (void)releaseAllDatabases
+{
+    [self executeLocked:^()
+    {
         [_databaseOutPool removeAllObjects];
         [_databaseInPool removeAllObjects];
     }];
 }
 
-- (void)inDatabase:(void (^)(FMDatabase *db))block {
-    
+- (void)inDatabase:(void (^)(FMDatabase *db))block
+{
     FMDatabase *db = [self db];
     
     block(db);
@@ -175,42 +197,47 @@
     [self pushDatabaseBackInPool:db];
 }
 
-- (void)beginTransaction:(BOOL)useDeferred withBlock:(void (^)(FMDatabase *db, BOOL *rollback))block {
-    
+- (void)beginTransaction:(BOOL)useDeferred withBlock:(void (^)(FMDatabase *db, BOOL *rollback))block
+{
     BOOL shouldRollback = NO;
     
     FMDatabase *db = [self db];
     
-    if (useDeferred) {
+    if (useDeferred)
+    {
         [db beginDeferredTransaction];
     }
-    else {
+    else
+    {
         [db beginTransaction];
     }
     
-    
     block(db, &shouldRollback);
     
-    if (shouldRollback) {
+    if (shouldRollback)
+    {
         [db rollback];
     }
-    else {
+    else
+    {
         [db commit];
     }
     
     [self pushDatabaseBackInPool:db];
 }
 
-- (void)inDeferredTransaction:(void (^)(FMDatabase *db, BOOL *rollback))block {
+- (void)inDeferredTransaction:(void (^)(FMDatabase *db, BOOL *rollback))block
+{
     [self beginTransaction:YES withBlock:block];
 }
 
-- (void)inTransaction:(void (^)(FMDatabase *db, BOOL *rollback))block {
+- (void)inTransaction:(void (^)(FMDatabase *db, BOOL *rollback))block
+{
     [self beginTransaction:NO withBlock:block];
 }
 #if SQLITE_VERSION_NUMBER >= 3007000
-- (NSError*)inSavePoint:(void (^)(FMDatabase *db, BOOL *rollback))block {
-    
+- (NSError*)inSavePoint:(void (^)(FMDatabase *db, BOOL *rollback))block
+{
     static unsigned long savePointIdx = 0;
     
     NSString *name = [NSString stringWithFormat:@"savePoint%ld", savePointIdx++];
@@ -221,17 +248,20 @@
     
     NSError *err = 0x00;
     
-    if (![db startSavePointWithName:name error:&err]) {
+    if (![db startSavePointWithName:name error:&err])
+    {
         [self pushDatabaseBackInPool:db];
         return err;
     }
     
     block(db, &shouldRollback);
     
-    if (shouldRollback) {
+    if (shouldRollback)
+    {
         [db rollbackToSavePointWithName:name error:&err];
     }
-    else {
+    else
+    {
         [db releaseSavePointWithName:name error:&err];
     }
     

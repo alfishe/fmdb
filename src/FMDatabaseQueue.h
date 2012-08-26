@@ -11,7 +11,8 @@
 
 @class FMDatabase;
 
-@interface FMDatabaseQueue : NSObject {
+@interface FMDatabaseQueue : NSObject
+{
     NSString            *_path;
     dispatch_queue_t    _queue;
     FMDatabase          *_db;

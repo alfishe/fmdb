@@ -25,10 +25,10 @@ in the main.m file.
 */
 
 
-
 @class FMDatabase;
 
-@interface FMDatabasePool : NSObject {
+@interface FMDatabasePool : NSObject
+{
     NSString            *_path;
     
     dispatch_queue_t    _lockQueue;

@@ -16,7 +16,8 @@
 @class FMDatabase;
 @class FMStatement;
 
-@interface FMResultSet : NSObject {
+@interface FMResultSet : NSObject
+{
     FMDatabase          *_parentDB;
     FMStatement         *_statement;
     

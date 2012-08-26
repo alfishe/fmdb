@@ -46,8 +46,8 @@
 #endif
 
 
-@interface FMDatabase : NSObject  {
-    
+@interface FMDatabase : NSObject
+{
     sqlite3*            _db;
     NSString*           _databasePath;
     BOOL                _logsErrors;
@@ -138,7 +138,8 @@
 
 @end
 
-@interface FMStatement : NSObject {
+@interface FMStatement : NSObject
+{
     sqlite3_stmt *_statement;
     NSString *_query;
     long _useCount;
