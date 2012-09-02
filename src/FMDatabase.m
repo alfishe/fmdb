@@ -88,8 +88,9 @@
         return YES;
     }
     
-    int err = sqlite3_open((_databasePath ? [_databasePath fileSystemRepresentation] : ":memory:"), &_db );
-    if(err != SQLITE_OK)
+    int err = sqlite3_open((_databasePath ? [_databasePath fileSystemRepresentation] : ":memory:"), &_db);
+
+    if (err != SQLITE_OK)
     {
         NSLog(@"error opening!: %d", err);
         return NO;
@@ -99,6 +100,7 @@
 }
 
 #if SQLITE_VERSION_NUMBER >= 3005000
+
 - (BOOL)openWithFlags:(int)flags
 {
     int err = sqlite3_open_v2((_databasePath ? [_databasePath fileSystemRepresentation] : ":memory:"), &_db, flags, NULL /* Name of VFS module to use */);
@@ -111,8 +113,8 @@
     
     return YES;
 }
-#endif
 
+#endif
 
 - (BOOL)close
 {
@@ -216,7 +218,6 @@
 
 - (void)setCachedStatement:(FMStatement*)statement forQuery:(NSString*)query
 {
-    
     query = [query copy]; // in case we got handed in a mutable string...
     
     [statement setQuery:query];
@@ -225,7 +226,6 @@
     
     FMDBRelease(query);
 }
-
 
 - (BOOL)rekey:(NSString*)key
 {
@@ -316,6 +316,9 @@
     return YES;
 }
 
+#pragma mark -
+#pragma mark Error handling
+
 - (NSString*)lastErrorMessage
 {
     return [NSString stringWithUTF8String:sqlite3_errmsg(_db)];
@@ -344,6 +347,9 @@
 {
    return [self errorWithMessage:[self lastErrorMessage]];
 }
+
+#pragma mark -
+#pragma mark Changes management
 
 - (sqlite_int64)lastInsertRowId
 {
@@ -379,6 +385,9 @@
     
     return ret;
 }
+
+#pragma mark -
+#pragma mark Data binding
 
 - (void)bindObject:(id)obj toColumn:(int)idx inStatement:(sqlite3_stmt*)pStmt
 {
@@ -1169,7 +1178,6 @@
 
 - (BOOL)releaseSavePointWithName:(NSString*)name error:(NSError**)outErr
 {
-    
     NSParameterAssert(name);
     
     BOOL worked = [self executeUpdate:[NSString stringWithFormat:@"release savepoint '%@';", name]];
@@ -1277,6 +1285,10 @@ void FMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlite3
     sqlite3_create_function([self sqliteHandle], [name UTF8String], count, SQLITE_UTF8, (__bridge void*)b, &FMDBBlockSQLiteCallBackFunction, 0x00, 0x00);
 #endif
 }
+
+#pragma mark -
+#pragma mark Backup databases
+
 
 @end
 
