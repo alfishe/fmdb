@@ -3,18 +3,20 @@
 #import <objc/runtime.h>
 
 @interface FMDatabase ()
-
 - (FMResultSet *)executeQuery:(NSString *)sql withArgumentsInArray:(NSArray*)arrayArgs orDictionary:(NSDictionary *)dictionaryArgs orVAList:(va_list)args;
+
 - (BOOL)executeUpdate:(NSString*)sql error:(NSError**)outErr withArgumentsInArray:(NSArray*)arrayArgs orDictionary:(NSDictionary *)dictionaryArgs orVAList:(va_list)args;
 @end
 
 @implementation FMDatabase
-@synthesize cachedStatements=_cachedStatements;
-@synthesize logsErrors=_logsErrors;
-@synthesize crashOnErrors=_crashOnErrors;
-@synthesize busyRetryTimeout=_busyRetryTimeout;
-@synthesize checkedOut=_checkedOut;
-@synthesize traceExecution=_traceExecution;
+
+@synthesize database = _db;
+@synthesize cachedStatements = _cachedStatements;
+@synthesize logsErrors = _logsErrors;
+@synthesize crashOnErrors = _crashOnErrors;
+@synthesize busyRetryTimeout = _busyRetryTimeout;
+@synthesize checkedOut = _checkedOut;
+@synthesize traceExecution = _traceExecution;
 
 + (id)databaseWithPath:(NSString*)aPath
 {
@@ -1287,8 +1289,30 @@ void FMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlite3
 }
 
 #pragma mark -
-#pragma mark Backup databases
-
+#pragma mark Backup database
+- (BOOL)backupToDatabase:(FMDatabase*)destDb
+{
+    BOOL result = NO;
+    
+    if (_db == NULL || destDb == NULL || destDb.database == NULL)
+        return result;
+    
+    sqlite3_backup* sql3backup;
+    
+    sql3backup = sqlite3_backup_init(destDb.database, "main", _db, "main");
+    
+    if (sql3backup != NULL)
+    {
+        // Perform full backup
+        sqlite3_backup_step(sql3backup, -1);
+        
+        sqlite3_backup_finish(sql3backup);
+        
+        result = YES;
+    }
+    
+    return result;
+}
 
 @end
 
@@ -1318,7 +1342,7 @@ void FMDBBlockSQLiteCallBackFunction(sqlite3_context *context, int argc, sqlite3
     if (_statement)
     {
         sqlite3_finalize(_statement);
-        _statement = 0x00;
+        _statement = NULL;
     }
 }
 

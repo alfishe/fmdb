@@ -65,7 +65,7 @@
 
 }
 
-
+@property sqlite3* database;
 @property (atomic, assign) BOOL traceExecution;
 @property (atomic, assign) BOOL checkedOut;
 @property (atomic, assign) int busyRetryTimeout;
@@ -135,6 +135,8 @@
 - (int)changes;
 
 - (void)makeFunctionNamed:(NSString*)name maximumArguments:(int)count withBlock:(void (^)(sqlite3_context *context, int argc, sqlite3_value **argv))block;
+
+- (BOOL)backupToDatabase:(FMDatabase*)destDb;
 
 @end
 
